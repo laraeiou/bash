@@ -1,8 +1,8 @@
 #!/bin/bash
 ##############################################################################################################
-# PandoraFMS Community  online installation script for Ubuntu 22.04
+# PandoraFMS Community  online script de instalación para Ubuntu 22.04
 ##############################################################################################################
-## Tested versions ##
+## Testeo de versión ##
 # Ubuntu 22.04.1
 # Ubuntu 22.04.2
 
