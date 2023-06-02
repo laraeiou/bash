@@ -1,8 +1,8 @@
 #!/bin/bash
 ##############################################################################################################
-# PandoraFMS Community  online script de instalación para Ubuntu 22.04
+# PandoraFMS Community  online installation script for Ubuntu 22.04
 ##############################################################################################################
-## Testeo de versión ##
+## Tested versions ##
 # Ubuntu 22.04.1
 # Ubuntu 22.04.2
 
@@ -130,6 +130,23 @@ installing_docker () {
 
 ## Main
 echo "Starting PandoraFMS Community deployment Ubuntu 22.04 ver. $S_VERSION"
+
+#check tools
+if ! grep --version &>> $LOGFILE ; then echo 'Error grep is not detected on the system, grep tool is needed for installation.'; exit -1 ;fi 
+if ! sed --version &>> $LOGFILE ; then echo 'Error sed is not detected on the system, sed tool is needed for installation.'; exit -1 ;fi 
+if ! curl --version &>> $LOGFILE ; then echo 'Error curl is not detected on the system, curl tool is needed for installation.'; exit -1 ;fi 
+if ! ping -V &>> $LOGFILE ; then echo 'Error ping is not detected on the system, ping tool is needed for installation.'; exit -1 ;fi 
+
+# Ubuntu Version
+if [ ! "$(grep -Ei 'Ubuntu' /etc/lsb-release)" ]; then
+         printf "\n ${red}Error this is not a Ubuntu system, this installer is compatible with Ubuntu systems only${reset}\n"
+         exit 1
+fi
+
+
+echo -en "${cyan}Check Ubuntu Version...${reset}"
+[[ $(sed -nr 's/VERSION_ID+=\s*"([0-9][0-9].[0-9][0-9])"$/\1/p' /etc/os-release) == "22.04" ]]
+check_cmd_status 'Error OS version, Ubuntu 22.04 is expected'
 
 #Detect OS
 os_name=$(grep ^PRETTY_NAME= /etc/os-release | cut -d '=' -f2 | tr -d '"')
