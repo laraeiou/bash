@@ -131,21 +131,6 @@ installing_docker () {
 ## Main
 echo "Starting PandoraFMS Community deployment Ubuntu 22.04 ver. $S_VERSION"
 
-# Ubuntu Version
-if [ ! "$(grep -Ei 'Ubuntu' /etc/lsb-release)" ]; then
-         printf "\n ${red}Error this is not a Ubuntu system, this installer is compatible with Ubuntu systems only${reset}\n"
-         exit 1
-fi
-
-
-echo -en "${cyan}Check Ubuntu Version...${reset}"
-[[ $(sed -nr 's/VERSION_ID+=\s*"([0-9][0-9].[0-9][0-9])"$/\1/p' /etc/os-release) == "22.04" ]]
-check_cmd_status 'Error OS version, Ubuntu 22.04 is expected'
-
-#Detect OS
-os_name=$(grep ^PRETTY_NAME= /etc/os-release | cut -d '=' -f2 | tr -d '"')
-execute_cmd "echo $os_name" "OS detected: ${os_name}"
-
 # initialice logfile
 execute_cmd "echo 'Starting community deployment' > $LOGFILE" "All installer activity is logged on $LOGFILE"
 echo "Community installer version: $S_VERSION" >> "$LOGFILE"
