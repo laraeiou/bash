@@ -131,10 +131,6 @@ installing_docker () {
 ## Main
 echo "Starting PandoraFMS Community deployment Ubuntu 22.04 ver. $S_VERSION"
 
-#Detect OS
-os_name=$(grep ^PRETTY_NAME= /etc/os-release | cut -d '=' -f2 | tr -d '"')
-execute_cmd "echo $os_name" "OS detected: ${os_name}"
-
 # initialice logfile
 execute_cmd "echo 'Starting community deployment' > $LOGFILE" "All installer activity is logged on $LOGFILE"
 echo "Community installer version: $S_VERSION" >> "$LOGFILE"
