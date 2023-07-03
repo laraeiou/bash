@@ -131,6 +131,27 @@ installing_docker () {
 ## Main
 echo "Starting PandoraFMS Community deployment Ubuntu 22.04 ver. $S_VERSION"
 
+#check tools
+if ! grep --version &>> $LOGFILE ; then echo 'Error grep is not detected on the system, grep tool is needed for installation.'; exit -1 ;fi 
+if ! sed --version &>> $LOGFILE ; then echo 'Error sed is not detected on the system, sed tool is needed for installation.'; exit -1 ;fi 
+if ! curl --version &>> $LOGFILE ; then echo 'Error curl is not detected on the system, curl tool is needed for installation.'; exit -1 ;fi 
+if ! ping -V &>> $LOGFILE ; then echo 'Error ping is not detected on the system, ping tool is needed for installation.'; exit -1 ;fi 
+
+# Ubuntu Version
+if [ ! "$(grep -Ei 'Ubuntu' /etc/lsb-release)" ]; then
+         printf "\n ${red}Error this is not a Ubuntu system, this installer is compatible with Ubuntu systems only${reset}\n"
+         exit 1
+fi
+
+
+echo -en "${cyan}Check Ubuntu Version...${reset}"
+[[ $(sed -nr 's/VERSION_ID+=\s*"([0-9][0-9].[0-9][0-9])"$/\1/p' /etc/os-release) == "22.04" ]]
+check_cmd_status 'Error OS version, Ubuntu 22.04 is expected'
+
+#Detect OS
+os_name=$(grep ^PRETTY_NAME= /etc/os-release | cut -d '=' -f2 | tr -d '"')
+execute_cmd "echo $os_name" "OS detected: ${os_name}"
+
 # initialice logfile
 execute_cmd "echo 'Starting community deployment' > $LOGFILE" "All installer activity is logged on $LOGFILE"
 echo "Community installer version: $S_VERSION" >> "$LOGFILE"
@@ -159,9 +180,6 @@ execute_cmd "systemctl --version" "Checking SystemD" 'This is not a SystemD enab
 
 # Check memomry greather or equal to 2G
 execute_cmd  "[ $(grep MemTotal /proc/meminfo | awk '{print $2}') -ge 1700000 ]" 'Checking memory (required: 2 GB)'
-
-# Check disk size at least 10 Gb free space
-execute_cmd "[ $(df -BM / | tail -1 | awk '{print $4}' | tr -d M) -gt 10000 ]" 'Checking Disk (required: 10 GB free min)'
 
 # Setting timezone
 rm -rf /etc/localtime &>> "$LOGFILE"
@@ -294,6 +312,13 @@ check_cmd_status "Error Installing phanromjs"
 rm -f /usr/sbin/fping &>> "$LOGFILE"
 ln -s /usr/bin/fping /usr/sbin/fping &>> "$LOGFILE"
 
+# Chrome
+rm -f /usr/bin/chromium-browser &>> "$LOGFILE"
+CHROME_VERSION=google-chrome-stable_110.0.5481.177-1_amd64.deb
+execute_cmd "wget https://dl.google.com/linux/deb/pool/main/g/google-chrome-stable/${CHROME_VERSION}" "Downloading google chrome"
+execute_cmd "apt install -y ./${CHROME_VERSION}" "Intalling google chrome"
+execute_cmd "ln -s /usr/bin/google-chrome /usr/bin/chromium-browser" "Creating /usr/bin/chromium-browser Symlink"
+
 # SDK VMware perl dependencies
 vmware_dependencies="\
     lib32z1  \
@@ -365,6 +390,16 @@ systemctl stop ufw.service &>> "$LOGFILE"
 systemctl disable ufw &>> "$LOGFILE"
 systemctl stop apparmor &>> "$LOGFILE"
 systemctl disable apparmor &>> "$LOGFILE"
+
+#install mysql
+execute_cmd "curl -O https://repo.percona.com/apt/percona-release_latest.generic_all.deb" "Downloading Percona repository for MySQL8"
+execute_cmd "apt install -y gnupg2 lsb-release ./percona-release_latest.generic_all.deb" "Installing Percona repository for MySQL8"
+execute_cmd "percona-release setup ps80" "Configuring Percona repository for MySQL8"
+
+echo -en "${cyan}Installing Percona Server for MySQL8...${reset}"
+    env DEBIAN_FRONTEND=noninteractive apt install -y percona-server-server percona-xtrabackup-80 &>> "$LOGFILE"
+check_cmd_status "Error Installing MySql Server"
+
 
 #Configuring Database
 if [ "$SKIP_DATABASE_INSTALL" -eq '0' ] ; then
